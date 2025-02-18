@@ -1,27 +1,29 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using Newtonsoft.Json;
 using Nibblr;
+using Nibblr.DTOs;
 using Server.Data;
+using Server.Repositories;
 using Server.Services;
 
 namespace Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class RecipeController(ApplicationDbContext db) : ControllerBase {
+public class RecipeController(IRecipeService _recipeService) : ControllerBase {
+    
     [HttpGet("/api/recipes")]
     public async Task<IResult> GetAllRecipes() {
-        return await new RecipeService(db).Get();
+        return Results.Ok(await _recipeService.GetAllRecipes());
     }
-    
-    [HttpGet("/api/recipe/{recipeID}")]
-    public async Task<IResult> GetRecipeByID(int recipeID) {
-        return await new RecipeService(db).Get(recipeId: recipeID);
-    }
-    
-    [HttpGet("/api/recipes/category/{categoryID}")]
-    public async Task<IResult> GetRecipeByCategoryID(int categoryId) {
-        return await new RecipeService(db).Get(categoryId: categoryId);
+
+    [HttpGet("/api/recipes/{id:int}")]
+    public async Task<IResult> GetRecipeById(int id) {
+        RecipeDTO? recipe = await _recipeService.GetRecipeById(id);
+        return recipe != null 
+            ? Results.Ok(recipe)
+            : Results.NotFound();
     }
 }
