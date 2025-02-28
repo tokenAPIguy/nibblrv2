@@ -10,19 +10,27 @@ public class RecipeRepository(NibblrDbContext _dbContext) : IRecipeRepository {
         _dbContext.Recipes.Add(recipe);
         await _dbContext.SaveChangesAsync();
         return await Task.FromResult(true);
+        // TODO add includes for ingredients and instructions
     }
     
     public async Task<Recipe?> GetByIdAsync(int id) {
-        return await _dbContext.Recipes.FirstOrDefaultAsync(x => x.ID == id);
+        return await _dbContext.Recipes
+            .Include(r => r.Ingredients)
+            .Include(r => r.Instructions)
+            .FirstOrDefaultAsync(x => x.ID == id);
     }
     
     public async Task<IEnumerable<Recipe>> GetAllAsync() {
-        return await _dbContext.Recipes.ToListAsync();
+        return await _dbContext.Recipes
+            .Include(r => r.Ingredients)
+            .Include(r => r.Instructions)
+            .ToListAsync();
     }
     
     public async Task<bool> UpdateAsync(Recipe recipe) {
        Recipe? existingRecipe = await _dbContext.Recipes
            .FirstOrDefaultAsync(x => x.ID.ToString() == recipe.ID.ToString());
+       // TODO add includes for ingredients and instructions
 
        if (existingRecipe == null) {
            return await Task.FromResult(false);
@@ -36,8 +44,8 @@ public class RecipeRepository(NibblrDbContext _dbContext) : IRecipeRepository {
        existingRecipe.Carbs = recipe.Carbs;
        existingRecipe.Fat = recipe.Fat;
        existingRecipe.Protein = recipe.Protein;
-       existingRecipe.InstructionsJson = recipe.InstructionsJson;
-       existingRecipe.IngredientsJson = recipe.IngredientsJson;
+       // existingRecipe.InstructionsJson = recipe.InstructionsJson;
+       // existingRecipe.IngredientsJson = recipe.IngredientsJson;
        existingRecipe.Bookmarked = recipe.Bookmarked;
        
         _dbContext.Update(existingRecipe);
