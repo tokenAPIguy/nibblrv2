@@ -6,17 +6,18 @@ on:
     branches:
       - main
         
-  env:
-    AZURE_WEBAPP_NAME: nibblr
-    AZURE_WEBAPP_PACKAGE_PATH: "./Nibblr.Server/publish"
-    DOTNET_VERSION: "9.x"
-    SOLUTION_PATH: "NibblrV2.sln"
-    API_PROJECT_PATH: "Nibblr.Server"
-    PUBLISH_DIR: "./publish"
+env:
+  AZURE_WEBAPP_NAME: nibblr
+  AZURE_WEBAPP_PACKAGE_PATH: "./Nibblr.Server/publish"
+  DOTNET_VERSION: "9.x"
+  SOLUTION_PATH: "NibblrV2.sln"
+  API_PROJECT_PATH: "Nibblr.Server"
+  PUBLISH_DIR: "./publish"
       
-  jobs:
+jobs:
+  build-and-test:
     name: Build and Test
-    run-on: ubuntu-latest 
+    runs-on: ubuntu-latest 
     
     steps:
       - uses: actions/checkout@v4
@@ -44,21 +45,21 @@ on:
           name: webapp 
           path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
           
-    deploy:
-        name: Deploy to Azure
-        runs-on: ubuntu-latest
-        needs: [build-and-test]
+  deploy:
+      name: Deploy to Azure
+      runs-on: ubuntu-latest
+      needs: [build-and-test]
+      
+      steps: 
+        - name: Download artifact from build job
+          uses: actions/download-artifact@v4
+          with:
+            name: webapp
+            path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
         
-        steps: 
-          - name: Download artifact from build job
-            uses: actions/download-artifact@v4
-            with:
-              name: webapp
-              path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-          
-          - name: Deploy
-            uses: azure/webapps-deploy@v2
-            with:
-              app-name: ${{ env.AZURE_WEBAPP_NAME }}
-              publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-              package: "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+        - name: Deploy
+          uses: azure/webapps-deploy@v2
+          with:
+            app-name: ${{ env.AZURE_WEBAPP_NAME }}
+            publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+            package: "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
